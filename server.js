@@ -3,6 +3,7 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Home route message
 app.get('/', (req, res) => {
     res.send('<h1>Free Fire Checker - Live API Running! 🚀</h1><p>Use: /api/player?uid=YOUR_UID</p>');
 });
@@ -17,11 +18,11 @@ app.get('/api/player', async (req, res) => {
 
     // Official HL Gaming API payload credentials
     const payload = {
-        sectionName: "AllData",                    // Fixed to documentation standard
+        sectionName: "AllData",
         PlayerUid: uid,
-        region: "sg",                             // Singapore server region
-        useruid: "hYjtFVZjmBVF5un9XUgwylFAAPu2",   // Your Official Dev ID
-        api: "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"     // Your Official Secret API Key
+        region: "sg",
+        useruid: "hYjtFVZjmBVF5un9XUgwylFAAPu2",
+        api: "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"
     };
 
     try {
@@ -29,27 +30,27 @@ app.get('/api/player', async (req, res) => {
         const response = await axios.post('https://proapis.hlgamingofficial.com/main/games/freefire/account/api', payload);
         const data = response.data;
 
-        // Validating the response data based on documentation
-        if (data && data.result && data.result.valid === true) {
+        // Checking if we successfully received the Account Info from the server
+        if (data && data.result && data.result.AccountInfo) {
             
-            // Extracting player details correctly
+            // Extracting player details properly from the live response
             const playerName = data.result.AccountInfo.AccountName;
             const playerLevel = data.result.AccountInfo.AccountLevel;
+            const playerRegion = data.result.AccountInfo.AccountRegion || "Singapore";
 
             return res.json({
                 status: "success",
                 uid: uid,
                 name: playerName,
                 level: playerLevel,
-                region: data.result.region || "Singapore"
+                region: playerRegion
             });
 
         } else {
-            // Returns the exact error coming directly from HL Gaming server to see what is wrong
+            // Error response if UID is completely invalid or server has limits
             return res.json({ 
                 status: "error", 
-                message: "API error response received",
-                raw_response: data // This will show us the real error behind the scene!
+                message: data.result ? data.result.message : "Invalid UID or API key limit reached!" 
             });
         }
 
@@ -66,3 +67,5 @@ app.get('/api/player', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+
