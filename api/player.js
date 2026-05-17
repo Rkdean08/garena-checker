@@ -15,13 +15,16 @@ export default async function handler(req, res) {
             "https://proapis.hlgamingofficial.com/main/games/freefire/account/api",
             {
                 method: "POST",
+
                 headers: {
                     "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "User-Agent": "Mozilla/5.0"
                 },
+
                 body: JSON.stringify({
                     sectionName: "AllData",
-                    PlayerUid: uid,
+                    PlayerUid: String(uid),
                     region: "S6",
                     useruid: "hYjtFVZjmBVF5un9XUgwylFAAPu2",
                     api: "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"
