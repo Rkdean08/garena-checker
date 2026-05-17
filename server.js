@@ -20,10 +20,10 @@ app.get("/api/player", async (req, res) => {
         }
 
         const payload = {
-            endpoint: "AllData",
-            PlayerUid: uid,
+            sectionName: "AllData",
+            PlayerUid: String(uid),
             region: "S6",
-            userid: "hYjtFVZjmBVF5un9XUgwylFAAPu2",
+            useruid: "hYjtFVZjmBVF5un9XUgwylFAAPu2",
             api: "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"
         };
 
@@ -32,7 +32,9 @@ app.get("/api/player", async (req, res) => {
             payload,
             {
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "User-Agent": "Mozilla/5.0"
                 }
             }
         );
@@ -41,7 +43,6 @@ app.get("/api/player", async (req, res) => {
 
         console.log(apiData);
 
-        // MODIFY THESE FIELDS BASED ON ACTUAL API RESPONSE
         const playerName =
             apiData?.AccountInfo?.AccountName ||
             apiData?.nickname ||
@@ -71,8 +72,13 @@ app.get("/api/player", async (req, res) => {
             message: "API Error",
             error: error.response?.data || error.message
         });
+
     }
 
 });
 
-module.exports = app;
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
+});
