@@ -12,48 +12,38 @@ app.get('/', (req, res) => {
 app.get('/api/player', async (req, res) => {
     const uid = req.query.uid;
 
-    // Check if UID is missing or not provided
     if (!uid) {
         return res.json({ status: "error", message: "Please enter a valid UID!" });
     }
 
     try {
-        // Fetching data from public Free Fire API
-        const response = await axios.get(`https://freefireapi.com.br/api/search_id?id=${uid}`);
-        
-        if (response.data && response.data.nickname) {
+        // New Active Official Top-up API Logic
+        const response = await axios.post('https://shop.garena.sg/api/shop/player_check', {
+            app_id: 100067, // Free Fire Game App ID
+            login_id: uid
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            }
+        });
+
+        if (response.data && response.data.player_name) {
             return res.json({
                 status: "success",
                 uid: uid,
-                name: response.data.nickname,
-                region: response.data.region || "Unknown",
-                level: response.data.level || "N/A"
+                name: response.data.player_name,
+                region: "Global"
             });
         } else {
-            return res.json({ status: "error", message: "Player nickname not found!" });
+            return res.json({ status: "error", message: "Player nickname not found or invalid UID!" });
         }
 
     } catch (error) {
-        // Backup logic using alternative public server if the first one fails
-        try {
-            const backupResponse = await axios.get(`https://api.garena.tools/ff/player/${uid}`);
-            if (backupResponse.data && backupResponse.data.name) {
-                return res.json({
-                    status: "success",
-                    uid: uid,
-                    name: backupResponse.data.name,
-                    region: backupResponse.data.region || "Unknown"
-                });
-            } else {
-                return res.json({ status: "error", message: "Server is busy. Please try again later!" });
-            }
-        } catch (backupError) {
-            return res.json({ status: "error", message: "Server is busy. Please try again later!" });
-        }
+        return res.json({ status: "error", message: "Server timeout. Please try again later!" });
     }
 });
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
