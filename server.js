@@ -24,7 +24,7 @@ app.get('/api/player', async (req, res) => {
 
     // 🎯 HL Gaming மெயின் சர்வருக்கான துல்லியமான பேராமீட்டர்கள் தம்பி!
     const payload = {
-        "endpoint": "AllData",                     // சரியான பேராமீட்டர் பெயர்!
+        "endpoint": "AllData",
         "PlayerUid": uid.trim(),
         "region": "S6",                            // 'sg'க்கு பதிலாக 'S6' (சிங்கப்பூர் சர்வர் குறியீடு)
         "userid": "hYjtFVZjmBVF5un9XUgwylFAAPu2",   // உங்களுடைய Dev ID
@@ -32,9 +32,9 @@ app.get('/api/player', async (req, res) => {
     };
 
     try {
-        // Sending request to HL Gaming API server
+        // 🔥 எடிட் செய்யப்பட்டது: 'Content-Type:' க்கு பதிலாக 'Content-Type' எனச் சரியாக மாற்றப்பட்டுள்ளது தம்பி!
         const response = await axios.post('https://proapis.hlgamingofficial.com/main/games/freefire/account/api', payload, {
-            headers: { 'Content-Type:': 'application/json' }
+            headers: { 'Content-Type': 'application/json' }
         });
         
         const data = response.data;
@@ -67,7 +67,6 @@ app.get('/api/player', async (req, res) => {
         }
 
     } catch (error) {
-        // எர்ரர் வரும்போது மெயின் சர்வர் தரும் உண்மையான ரெஸ்பான்ஸை பார்க்க
         let hlErrorDetails = error.message;
         if (error.response && error.response.data) {
             hlErrorDetails = error.response.data;
