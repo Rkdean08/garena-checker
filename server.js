@@ -3,7 +3,13 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Home route message
+// CORS பிழையைத் தடுக்க Response Headers சேர்க்கிறோம் தம்பி!
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 app.get('/', (req, res) => {
     res.send('<h1>Free Fire Checker - Live API Running! 🚀</h1><p>Use: /api/player?uid=YOUR_UID</p>');
 });
@@ -16,13 +22,13 @@ app.get('/api/player', async (req, res) => {
         return res.json({ status: "error", message: "Please enter a valid UID!" });
     }
 
-    // Official HL Gaming API payload credentials
+    // 🎯 HL Gaming மெயின் சர்வருக்கான துல்லியமான பேராமீட்டர்கள் தம்பி!
     const payload = {
-        sectionName: "AllData",
-        PlayerUid: uid,
-        region: "sg",
-        useruid: "hYjtFVZjmBVF5un9XUgwylFAAPu2",
-        api: "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"
+        "endpoint": "AllData", // 'sectionName'க்கு பதிலாக 'endpoint'
+        "PlayerUid": uid,
+        "region": "S6",       // 'sg'க்கு பதிலாக 'S6' (சிங்கப்பூர் சர்வர் குறியீடு)
+        "userid": "hYjtFVZjmBVF5un9XUgwylFAAPu2", // உங்களுடைய Dev ID
+        "api": "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"    // உங்களுடைய Secret API Key
     };
 
     try {
@@ -30,36 +36,47 @@ app.get('/api/player', async (req, res) => {
         const response = await axios.post('https://proapis.hlgamingofficial.com/main/games/freefire/account/api', payload);
         const data = response.data;
 
-        // Checking if we successfully received the Account Info from the server
-        if (data && data.result && data.result.AccountInfo) {
-            
-            // Extracting player details properly from the live response
+        // சர்வரிடமிருந்து வரும் ரெஸ்பான்ஸை துல்லியமாகச் செக் செய்கிறோம் தம்பி!
+        if (data && data.result && data.result.AccountInfo && data.result.AccountInfo.AccountName) {
             const playerName = data.result.AccountInfo.AccountName;
-            const playerLevel = data.result.AccountInfo.AccountLevel;
-            const playerRegion = data.result.AccountInfo.AccountRegion || "Singapore";
+            const playerLevel = data.result.AccountInfo.AccountLevel || "N/A";
 
             return res.json({
                 status: "success",
                 uid: uid,
                 name: playerName,
                 level: playerLevel,
-                region: playerRegion
+                region: data.result.region || "S6"
             });
+        } 
+        // மாற்று ரெஸ்பான்ஸ் வடிவமைப்பு இருந்தால் அதையும் செக் செய்கிறோம்
+        else if (data && data.raw_response && data.raw_response.result && data.raw_response.result.AccountInfo) {
+            const playerName = data.raw_response.result.AccountInfo.AccountName;
+            const playerLevel = data.raw_response.result.AccountInfo.AccountLevel || "N/A";
 
-        } else {
-            // Error response if UID is completely invalid or server has limits
-            return res.json({ 
-                status: "error", 
-                message: data.result ? data.result.message : "Invalid UID or API key limit reached!" 
+            return res.json({
+                status: "success",
+                uid: uid,
+                name: playerName,
+                level: playerLevel,
+                region: "S6"
+            });
+        }
+        else {
+            // ஒருவேளை மெயின் சர்வரே எர்ரர் தந்தால் அதை அப்படியே பார்க்க
+            return res.json({
+                status: "error",
+                message: "Player Not Found on HL Server",
+                raw_response: data 
             });
         }
 
     } catch (error) {
         // Network connection error handling
-        return res.json({ 
-            status: "error", 
+        return res.json({
+            status: "error",
             message: "HL Gaming API server network error!",
-            details: error.message 
+            details: error.message
         });
     }
 });
@@ -67,5 +84,3 @@ app.get('/api/player', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-
