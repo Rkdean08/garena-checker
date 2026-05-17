@@ -24,46 +24,41 @@ app.get('/api/player', async (req, res) => {
 
     // 🎯 HL Gaming மெயின் சர்வருக்கான துல்லியமான பேராமீட்டர்கள் தம்பி!
     const payload = {
-        "endpoint": "AllData", // 'sectionName'க்கு பதிலாக 'endpoint'
-        "PlayerUid": uid,
-        "region": "S6",       // 'sg'க்கு பதிலாக 'S6' (சிங்கப்பூர் சர்வர் குறியீடு)
-        "userid": "hYjtFVZjmBVF5un9XUgwylFAAPu2", // உங்களுடைய Dev ID
-        "api": "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"    // உங்களுடைய Secret API Key
+        "endpoint": "AllData",                     // சரியான பேராமீட்டர் பெயர்!
+        "PlayerUid": uid.trim(),
+        "region": "S6",                            // 'sg'க்கு பதிலாக 'S6' (சிங்கப்பூர் சர்வர் குறியீடு)
+        "userid": "hYjtFVZjmBVF5un9XUgwylFAAPu2",   // உங்களுடைய Dev ID
+        "api": "uEEXadfmtyyzF9GKHjmDLvjoEM7mSX"      // உங்களுடைய Secret API Key
     };
 
     try {
         // Sending request to HL Gaming API server
-        const response = await axios.post('https://proapis.hlgamingofficial.com/main/games/freefire/account/api', payload);
+        const response = await axios.post('https://proapis.hlgamingofficial.com/main/games/freefire/account/api', payload, {
+            headers: { 'Content-Type:': 'application/json' }
+        });
+        
         const data = response.data;
 
         // சர்வரிடமிருந்து வரும் ரெஸ்பான்ஸை துல்லியமாகச் செக் செய்கிறோம் தம்பி!
         if (data && data.result && data.result.AccountInfo && data.result.AccountInfo.AccountName) {
-            const playerName = data.result.AccountInfo.AccountName;
-            const playerLevel = data.result.AccountInfo.AccountLevel || "N/A";
-
             return res.json({
                 status: "success",
                 uid: uid,
-                name: playerName,
-                level: playerLevel,
+                name: data.result.AccountInfo.AccountName,
+                level: data.result.AccountInfo.AccountLevel || "N/A",
                 region: data.result.region || "S6"
             });
         } 
-        // மாற்று ரெஸ்பான்ஸ் வடிவமைப்பு இருந்தால் அதையும் செக் செய்கிறோம்
         else if (data && data.raw_response && data.raw_response.result && data.raw_response.result.AccountInfo) {
-            const playerName = data.raw_response.result.AccountInfo.AccountName;
-            const playerLevel = data.raw_response.result.AccountInfo.AccountLevel || "N/A";
-
             return res.json({
                 status: "success",
                 uid: uid,
-                name: playerName,
-                level: playerLevel,
+                name: data.raw_response.result.AccountInfo.AccountName,
+                level: data.raw_response.result.AccountInfo.AccountLevel || "N/A",
                 region: "S6"
             });
         }
         else {
-            // ஒருவேளை மெயின் சர்வரே எர்ரர் தந்தால் அதை அப்படியே பார்க்க
             return res.json({
                 status: "error",
                 message: "Player Not Found on HL Server",
@@ -72,11 +67,16 @@ app.get('/api/player', async (req, res) => {
         }
 
     } catch (error) {
-        // Network connection error handling
+        // எர்ரர் வரும்போது மெயின் சர்வர் தரும் உண்மையான ரெஸ்பான்ஸை பார்க்க
+        let hlErrorDetails = error.message;
+        if (error.response && error.response.data) {
+            hlErrorDetails = error.response.data;
+        }
+        
         return res.json({
             status: "error",
-            message: "HL Gaming API server network error!",
-            details: error.message
+            message: "HL Gaming API server returned an error!",
+            details: hlErrorDetails
         });
     }
 });
