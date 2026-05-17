@@ -4,7 +4,8 @@ export default async function handler(req, res) {
 
   if (!uid) {
     return res.status(400).json({
-      error: "UID missing"
+      success: false,
+      message: "UID missing"
     });
   }
 
@@ -14,13 +15,12 @@ export default async function handler(req, res) {
       "https://proapis.hlgamingofficial.com/main/games/freefire/account/api",
       {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json"
         },
 
         body: JSON.stringify({
-          sectionName: "AccountBasicInfo",
+          sectionName: "AllData",
           PlayerUid: uid,
           region: "sg",
           useruid: "hYjtFVZjmBVF5un9XUgwylFAAPu2",
@@ -29,13 +29,20 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.text();
+    const data = await response.json();
 
-    res.status(200).send(data);
+    return res.status(200).json({
+      success: true,
+      uid: uid,
+      player_name: data.result.AccountInfo.AccountName,
+      level: data.result.AccountInfo.AccountLevel,
+      likes: data.result.AccountInfo.AccountLikes
+    });
 
   } catch (err) {
 
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
       error: err.message
     });
 
